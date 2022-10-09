@@ -47,8 +47,8 @@ if __name__ == '__main__':
         print()
         print(f'{"Program number":30}: {program:5}')
         for name, value in parameters:
-            if name.startswith('Patch Name'):
-                print(f'{name:30}: {value:5} {chr(value)}')
+            if name.startswith('Patch Name') and value > 0:
+                print(f'{name:30}: {value:5} {repr(chr(value))}')
             else:                
                 print(f'{name:30}: {value:5}')
 
