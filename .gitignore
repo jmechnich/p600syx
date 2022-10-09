@@ -1,0 +1,7 @@
+*~
+*.syx
+*.pdf
+
+/dist/
+/p600syx.egg-info/
+__pycache__/
