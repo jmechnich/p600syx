@@ -1,3 +1,5 @@
+from .Error import ParseError
+
 class SequentialSysExParser:
     # From Prophet-600 owner's manual, page 10-6
     # BYTE  MS BIT           LS BIT
