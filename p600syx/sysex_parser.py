@@ -3,10 +3,12 @@ This module contains the abstract base class for all parsers in p600syx.
 """
 from abc import ABCMeta, abstractmethod
 
+
 class SysExParser(metaclass=ABCMeta):
     """
     This class is the abstract base for all parsers in p600syx.
     """
+
     def __init__(self, name: str) -> None:
         self.name = name
 
