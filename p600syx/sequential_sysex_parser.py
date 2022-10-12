@@ -1,6 +1,16 @@
-from .Error import ParseError
+"""
+This module contains the parser for decoding MIDI SysEx dumps created using
+the original firmware for the Sequential Circuits Prophet-600 analog
+synthesizer.
+"""
+from .error import ParseError
 
 class SequentialSysExParser:
+    """
+    This class implements the decoding of MIDI SysEx dumps created using
+    the original firmware for the Sequential Circuits Prophet-600 analog
+    synthesizer.
+    """
     # From Prophet-600 owner's manual, page 10-6
     # BYTE  MS BIT           LS BIT
     # 0     B0 A6 A5 A4 A3 A2 A1 A0
@@ -64,20 +74,60 @@ class SequentialSysExParser:
         self.name = name
         self.header = b'\xf0\x01\x02'
 
-    def can_parse(self, msg):
+    @classmethod
+    def trunc_and_format(cls, param, data):
+        """
+        This internal function returns a string containing a parameter name
+        and value.
+
+        Parameters:
+                param (tuple): A tuple of parameter name, number of bits and
+                               conversion function for extracting the parameter
+                               value from the 16 bytes of message data.
+                data (list): List of integers containing the full 16 bytes of
+                             message data.
+
+        Returns:
+                A string containing the parameter name, maximum and current
+                value.
+        """
+        name, bits, func = param
+        mask = (0x1<<bits) - 1
+        return (f'{name} (max: {mask})', func(data) & mask)
+
+    def can_decode(self, msg):
+        """
+        This function checks if the parser can decode a given MIDI SysEx dump
+        using the header of the data.
+
+        Parameters:
+                msg (bytes): Midi SysEx dump
+
+        Returns:
+                True if parser can decode dump, False otherwise.
+        """
         if msg.startswith(self.header):
             return True
         return False
 
-    def trunc_and_format(self, p, data):
-        name, bits, func = p
-        mask = (0x1<<bits) - 1
-        return (f'{name} (max: {mask})', func(data) & mask)
-                
     def decode(self, msg):
+        """
+        This function decodes a MIDI SysEx dump created using
+        the original firmware for the Sequential Circuits Prophet-600 analog
+        synthesizer.
+
+        Parameter:
+                msg (bytes): MIDI SysEx dump
+
+        Returns:
+                A tuple containing the program number, a list of parameters,
+                and (possibly) a list of remaining integer data that was not or
+                could not be decoded.
+        """
         if not msg.startswith(self.header):
             raise ParseError(
-                f'Header mismatch: expected {self.header}, got {msg[:len(self.header)]}'
+                f'Header mismatch: expected {self.header},'
+                f' got {msg[:len(self.header)]}'
             )
         program = msg[len(self.header)]
         # From P600 owner's manual, page 10-5
@@ -85,16 +135,16 @@ class SequentialSysExParser:
         # right justified, LS nibble sent first
         data = msg[len(self.header)+1:]
         if len(data) != 32:
-            for b in data:
-                print('', bin(b))
+            for byte in data:
+                print('', bin(byte))
             raise ParseError(
-                f'Expected 32 bytes of data, got {len(msg[pos:])}'
+                f'Expected 32 bytes of data, got {len(data)}'
             )
         # compose bytes from nibbles
         data = [ (msb<<4 | lsb) for lsb, msb in zip(data[::2], data[1::2]) ]
         parameters = []
         # generate list of parameters from raw data
-        for p in SequentialSysExParser.parameters:
-            parameters.append(self.trunc_and_format(p, data))
+        for param in SequentialSysExParser.parameters:
+            parameters.append(self.trunc_and_format(param, data))
 
         return (program, parameters, data)

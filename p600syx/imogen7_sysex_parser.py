@@ -1,6 +1,16 @@
-from .GliGliSysExParser import GliGliSysExParser
+"""
+This module contains the parser for decoding MIDI SysEx dumps created using
+the Imogen mod (storage version 7) for the Sequential Circuits Prophet-600
+analog synthesizer.
+"""
+from .gligli_sysex_parser import GliGliSysExParser
 
 class Imogen7SysExParser(GliGliSysExParser):
+    """
+    This class implements the decoding of MIDI SysEx dumps created using
+    the Imogen mod (storage version 7) for the Sequential Circuits Prophet-600
+    analog synthesizer.
+    """
     parameters = [
         ('Frequency A'                 , 2),
         ('Volume A'                    , 2),

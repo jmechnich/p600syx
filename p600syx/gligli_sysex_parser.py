@@ -1,6 +1,17 @@
-from .Error import ParseError
+"""
+This module contains the parser for decoding MIDI SysEx dumps created using
+the original GliGli mod for the Sequential Circuits Prophet-600 analog
+synthesizer.
+"""
+
+from .error import ParseError
 
 class GliGliSysExParser:
+    """
+    This class implements the decoding of MIDI SysEx dumps created using
+    the original GliGli mod for the Sequential Circuits Prophet-600 analog
+    synthesizer.
+    """
     parameters = [
         ('Osc A Frequency'             , 2),
         ('Osc A Volume'                , 2),
@@ -70,18 +81,21 @@ class GliGliSysExParser:
         self.header = b'\xf0\x00\x61\x16\x01'
         self.format_id = b'\xa5\x16\x61\x00'
         self.format_version = b'\x02'
-        
-    def can_parse(self, msg):
-        if msg.startswith(self.header):
-            data = self.unpack(msg[len(self.header):len(self.header)+10])
-            program = data.pop(0)
-            magic = bytes(data[:5])
-            if magic == self.format_id + self.format_version:
-                return True
-        return False
 
-    def pop_and_format(self, p, data):
-        name, nbytes = p
+    @classmethod
+    def pop_and_format(cls, parameter, data):
+        """
+        This internal function pops up to two bytes of data from a list and
+        converts it to the appropriate format for a given parameter.
+
+        Parameters:
+                parameter (tuple): A tuple containing the parameter name and
+                                   length in bytes.
+                data (list): A list of integers containing parameter data.
+        Returns:
+                A tuple containing the parameter name and value.
+        """
+        name, nbytes = parameter
         try:
             lsb, msb = (
                 data.pop(0) if len(data) else 0,
@@ -93,19 +107,67 @@ class GliGliSysExParser:
         value = msb<<8 | lsb
         return (name, value)
 
-    def unpack(self, data):
+    @classmethod
+    def unpack(cls, data):
+        """
+        This internal function decodes five 7-bit bytes of raw data packed
+        into four full 8-bit bytes.
+
+        Parameters:
+                data (list): A list of integers containing raw 7-bit data.
+                             The length of the list is required to be a
+                             multiple of five.
+        Returns:
+                A integer list of the unpacked data. The length will be a
+                multiple of 4.
+        """
         ret = []
         while len(data):
             for shift in range(4):
                 ret.append(data[shift] + 128 * (data[4]>>shift & 1))
             data = data[5:]
         return ret
-    
+
+    def can_decode(self, msg):
+        """
+        This function checks if the parser can decode a given MIDI SysEx dump
+        using the header of the data.
+
+        Parameters:
+                msg (bytes): Midi SysEx dump
+
+        Returns:
+                True if parser can decode dump, False otherwise.
+        """
+        if msg.startswith(self.header):
+            data = self.unpack(msg[len(self.header):len(self.header)+10]
+            )
+            # pop program number
+            _ = data.pop(0)
+            magic = bytes(data[:5])
+            if magic == self.format_id + self.format_version:
+                return True
+        return False
+
     def decode(self, msg):
+        """
+        This function decodes a MIDI SysEx dump created using
+        the original GliGli mod for the Sequential Circuits Prophet-600 analog
+        synthesizer.
+
+        Parameter:
+                msg (bytes): MIDI SysEx dump
+
+        Returns:
+                A tuple containing the program number, a list of parameters,
+                and (possibly) a list of remaining integer data that was not or
+                could not be decoded.
+        """
         parameters = []
         if not msg.startswith(self.header):
             raise ParseError(
-                f'Header mismatch: expected {self.header}, got {msg[:len(self.header)]}'
+                f'Header mismatch: expected {self.header},'
+                f'got {msg[:len(self.header)]}'
             )
         data = self.unpack(msg[len(self.header):])
         program = data.pop(0)
@@ -116,6 +178,6 @@ class GliGliSysExParser:
                 f' expected {self.format_id + self.format_version}, got {magic}'
             )
         data = data[5:]
-        for p in self.parameters:
-            parameters.append(self.pop_and_format(p, data))
+        for param in self.parameters:
+            parameters.append(self.pop_and_format(param, data))
         return (program, parameters, data)
