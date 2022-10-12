@@ -3,14 +3,19 @@ This module contains the parser for decoding MIDI SysEx dumps created using
 the original firmware for the Sequential Circuits Prophet-600 analog
 synthesizer.
 """
+from collections.abc import Callable
+
+from .sysex_parser import SysExParser
 from .error import ParseError
 
-class SequentialSysExParser:
+
+class SequentialSysExParser(SysExParser):
     """
     This class implements the decoding of MIDI SysEx dumps created using
     the original firmware for the Sequential Circuits Prophet-600 analog
     synthesizer.
     """
+
     # From Prophet-600 owner's manual, page 10-6
     # BYTE  MS BIT           LS BIT
     # 0     B0 A6 A5 A4 A3 A2 A1 A0
@@ -30,52 +35,54 @@ class SequentialSysExParser:
     # E     Z7 Z6 Z5 Z4 Z3 Z2 Z1 Z0
     # F     ZF ZE ZD ZC ZB ZA Z9 Z8
     parameters = [
-        ('OSC A PULSE WIDTH', 7, lambda data: data[0x0]),
-        ('PMOD FIL ENV AMT' , 4, lambda data: data[0x1]<<1 | data[0x0]>>7),
-        ('LFO FREQ'         , 4, lambda data: data[0x1]>>3),
-        ('PMOD OSC B AMT'   , 7, lambda data: data[0x2]<<1 | data[0x1]>>7),
-        ('LFO AMT'          , 5, lambda data: data[0x3]<<2 | data[0x2]>>6),
-        ('OSC B FREQ'       , 6, lambda data: data[0x4]<<5 | data[0x3]>>3),
-        ('OSC A FREQ'       , 6, lambda data: data[0x4]>>1),
-        ('OSC B FINE'       , 7, lambda data: data[0x5]<<1 | data[0x4]>>7),
-        ('MIXER'            , 6, lambda data: data[0x6]<<2 | data[0x5]>>6),
-        ('FILTER CUTOFF'    , 7, lambda data: data[0x7]<<4 | data[0x6]>>4),
-        ('RESONANCE'        , 6, lambda data: data[0x8]<<5 | data[0x7]>>3),
-        ('FIL ENV AMT'      , 4, lambda data: data[0x8]>>1),
-        ('FIL REL'          , 4, lambda data: data[0x9]<<3 | data[0x8]>>5),
-        ('FIL SUS'          , 4, lambda data: data[0x9]>>1),
-        ('FIL DEC'          , 4, lambda data: data[0xa]<<3 | data[0x9]>>5),
-        ('FIL ATK'          , 4, lambda data: data[0xa]>>1),
-        ('AMP REL'          , 4, lambda data: data[0xb]<<3 | data[0xa]>>5),
-        ('AMP SUS'          , 4, lambda data: data[0xb]>>1),
-        ('AMP DEC'          , 4, lambda data: data[0xc]<<3 | data[0xb]>>5),
-        ('AMP ATK'          , 4, lambda data: data[0xc]>>1),
-        ('GLIDE'            , 4, lambda data: data[0xd]<<3 | data[0xc]>>5),
-        ('OSC B PULSE WIDTH', 7, lambda data: data[0xd]>>1),
-        ('OSC A PULSE'      , 1, lambda data: data[0xe]),
-        ('OSC B PULSE'      , 1, lambda data: data[0xe]>>1),
-        ('FIL KBD FULL'     , 1, lambda data: data[0xe]>>2),
-        ('FIL KBD 1/2'      , 1, lambda data: data[0xe]>>3),
-        ('LFO SHAPE (1=TRI)', 1, lambda data: data[0xe]>>4),
-        ('LFO FREQ AB'      , 1, lambda data: data[0xe]>>5),
-        ('LFO PW AB'        , 1, lambda data: data[0xe]>>6),
-        ('LFO FIL'          , 1, lambda data: data[0xe]>>7),
-        ('OSC A SAW'        , 1, lambda data: data[0xf]),
-        ('OSC A TRI'        , 1, lambda data: data[0xf]>>1),
-        ('OSC A SYNC'       , 1, lambda data: data[0xf]>>2),
-        ('OSC B SAW'        , 1, lambda data: data[0xf]>>3),
-        ('OSC B TRI'        , 1, lambda data: data[0xf]>>4),
-        ('PMOD FREQ A'      , 1, lambda data: data[0xf]>>5),
-        ('PMOD FIL'         , 1, lambda data: data[0xf]>>6),
-        ('UNISON'           , 1, lambda data: data[0xf]>>7),
+        ("OSC A PULSE WIDTH", 7, lambda data: data[0x0]),
+        ("PMOD FIL ENV AMT", 4, lambda data: data[0x1] << 1 | data[0x0] >> 7),
+        ("LFO FREQ", 4, lambda data: data[0x1] >> 3),
+        ("PMOD OSC B AMT", 7, lambda data: data[0x2] << 1 | data[0x1] >> 7),
+        ("LFO AMT", 5, lambda data: data[0x3] << 2 | data[0x2] >> 6),
+        ("OSC B FREQ", 6, lambda data: data[0x4] << 5 | data[0x3] >> 3),
+        ("OSC A FREQ", 6, lambda data: data[0x4] >> 1),
+        ("OSC B FINE", 7, lambda data: data[0x5] << 1 | data[0x4] >> 7),
+        ("MIXER", 6, lambda data: data[0x6] << 2 | data[0x5] >> 6),
+        ("FILTER CUTOFF", 7, lambda data: data[0x7] << 4 | data[0x6] >> 4),
+        ("RESONANCE", 6, lambda data: data[0x8] << 5 | data[0x7] >> 3),
+        ("FIL ENV AMT", 4, lambda data: data[0x8] >> 1),
+        ("FIL REL", 4, lambda data: data[0x9] << 3 | data[0x8] >> 5),
+        ("FIL SUS", 4, lambda data: data[0x9] >> 1),
+        ("FIL DEC", 4, lambda data: data[0xA] << 3 | data[0x9] >> 5),
+        ("FIL ATK", 4, lambda data: data[0xA] >> 1),
+        ("AMP REL", 4, lambda data: data[0xB] << 3 | data[0xA] >> 5),
+        ("AMP SUS", 4, lambda data: data[0xB] >> 1),
+        ("AMP DEC", 4, lambda data: data[0xC] << 3 | data[0xB] >> 5),
+        ("AMP ATK", 4, lambda data: data[0xC] >> 1),
+        ("GLIDE", 4, lambda data: data[0xD] << 3 | data[0xC] >> 5),
+        ("OSC B PULSE WIDTH", 7, lambda data: data[0xD] >> 1),
+        ("OSC A PULSE", 1, lambda data: data[0xE]),
+        ("OSC B PULSE", 1, lambda data: data[0xE] >> 1),
+        ("FIL KBD FULL", 1, lambda data: data[0xE] >> 2),
+        ("FIL KBD 1/2", 1, lambda data: data[0xE] >> 3),
+        ("LFO SHAPE (1=TRI)", 1, lambda data: data[0xE] >> 4),
+        ("LFO FREQ AB", 1, lambda data: data[0xE] >> 5),
+        ("LFO PW AB", 1, lambda data: data[0xE] >> 6),
+        ("LFO FIL", 1, lambda data: data[0xE] >> 7),
+        ("OSC A SAW", 1, lambda data: data[0xF]),
+        ("OSC A TRI", 1, lambda data: data[0xF] >> 1),
+        ("OSC A SYNC", 1, lambda data: data[0xF] >> 2),
+        ("OSC B SAW", 1, lambda data: data[0xF] >> 3),
+        ("OSC B TRI", 1, lambda data: data[0xF] >> 4),
+        ("PMOD FREQ A", 1, lambda data: data[0xF] >> 5),
+        ("PMOD FIL", 1, lambda data: data[0xF] >> 6),
+        ("UNISON", 1, lambda data: data[0xF] >> 7),
     ]
 
-    def __init__(self, name='SequentialSysExParser'):
-        self.name = name
-        self.header = b'\xf0\x01\x02'
+    def __init__(self, name: str = "SequentialSysExParser"):
+        super().__init__(name)
+        self.header = b"\xf0\x01\x02"
 
     @classmethod
-    def trunc_and_format(cls, param, data):
+    def trunc_and_format(
+        cls, param: tuple[str, int, Callable[[list[int]], int]], data: list[int]
+    ) -> tuple[str, int]:
         """
         This internal function returns a string containing a parameter name
         and value.
@@ -92,10 +99,10 @@ class SequentialSysExParser:
                 value.
         """
         name, bits, func = param
-        mask = (0x1<<bits) - 1
-        return (f'{name} (max: {mask})', func(data) & mask)
+        mask = (0x1 << bits) - 1
+        return (f"{name} (max: {mask})", func(data) & mask)
 
-    def can_decode(self, msg):
+    def can_decode(self, msg: bytes) -> bool:
         """
         This function checks if the parser can decode a given MIDI SysEx dump
         using the header of the data.
@@ -110,7 +117,7 @@ class SequentialSysExParser:
             return True
         return False
 
-    def decode(self, msg):
+    def decode(self, msg: bytes) -> tuple[int, list[tuple[str, int]], list[int]]:
         """
         This function decodes a MIDI SysEx dump created using
         the original firmware for the Sequential Circuits Prophet-600 analog
@@ -126,22 +133,20 @@ class SequentialSysExParser:
         """
         if not msg.startswith(self.header):
             raise ParseError(
-                f'Header mismatch: expected {self.header},'
-                f' got {msg[:len(self.header)]}'
+                f"Header mismatch: expected {self.header!r},"
+                f" got {msg[:len(self.header)]!r}"
             )
         program = msg[len(self.header)]
         # From P600 owner's manual, page 10-5
         # 16 bytes of data sent as 32 4-bit nibbles
         # right justified, LS nibble sent first
-        data = msg[len(self.header)+1:]
-        if len(data) != 32:
-            for byte in data:
-                print('', bin(byte))
-            raise ParseError(
-                f'Expected 32 bytes of data, got {len(data)}'
-            )
+        raw_data = msg[len(self.header) + 1 :]
+        if len(raw_data) != 32:
+            for byte in raw_data:
+                print("", bin(byte))
+            raise ParseError(f"Expected 32 bytes of data, got {len(raw_data)}")
         # compose bytes from nibbles
-        data = [ (msb<<4 | lsb) for lsb, msb in zip(data[::2], data[1::2]) ]
+        data = [int(msb << 4 | lsb) for lsb, msb in zip(raw_data[::2], raw_data[1::2])]
         parameters = []
         # generate list of parameters from raw data
         for param in SequentialSysExParser.parameters:
