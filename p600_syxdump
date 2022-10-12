@@ -7,14 +7,20 @@ import sys
 import p600syx
 
 if __name__ == "__main__":
-    argparser = argparse.ArgumentParser(description="Dump Prophet-600 presets.")
+    argparser = argparse.ArgumentParser(
+        description="Print preset contents of Prophet-600 MIDI SysEx dumps."
+    )
     argparser.add_argument(
         "-d", "--debug", action="store_true", help="turn on debug output"
     )
     argparser.add_argument(
         "-p", "--program", type=int, default=-1, help="filter for program number"
     )
-    argparser.add_argument("infile", nargs="?", help="input sysex file")
+    argparser.add_argument(
+        "infile",
+        nargs="?",
+        help="input sysex file. If no file is given, the script will read from standard input.",
+    )
     args = argparser.parse_args()
 
     if args.infile:
