@@ -14,7 +14,18 @@ if __name__ == "__main__":
         "-d", "--debug", action="store_true", help="turn on debug output"
     )
     argparser.add_argument(
-        "-p", "--program", type=int, default=-1, help="filter for program number"
+        "-m",
+        "--message",
+        type=int,
+        default=-1,
+        help="select message number (default: all messages)",
+    )
+    argparser.add_argument(
+        "-p",
+        "--program",
+        type=int,
+        default=-1,
+        help="select program number (default: all programs)",
     )
     argparser.add_argument(
         "infile",
@@ -28,7 +39,7 @@ if __name__ == "__main__":
             print(f"File {args.infile} not found, exiting")
             sys.exit(1)
         if args.debug:
-            print("Reading from file {args.infile}", file=sys.stderr)
+            print(f"Reading from file {args.infile}", file=sys.stderr)
         with open(args.infile, "rb") as f:
             raw_data = f.read()
     else:
@@ -42,9 +53,14 @@ if __name__ == "__main__":
         print(f"Found {len(msgs)} messages")
 
     for i, m in enumerate(msgs):
+        if args.message > -1 and i != args.message:
+            continue
         parser = p600syx.factory.get_parser(m)
         if not parser:
             print(f"No suitable parser found for message {i}")
+            if args.debug:
+                print(repr(m), file=sys.stderr)
+                print()
             continue
         if args.debug:
             print(f"Using {parser.name} for message {i}", file=sys.stderr)
