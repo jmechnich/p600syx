@@ -117,7 +117,9 @@ class SequentialSysExParser(SysExParser):
             return True
         return False
 
-    def decode(self, msg: bytes) -> tuple[int, list[tuple[str, int]], list[int]]:
+    def decode(
+        self, msg: bytes
+    ) -> tuple[int, list[tuple[str, int]], list[int]]:
         """
         This function decodes a MIDI SysEx dump created using
         the original firmware for the Sequential Circuits Prophet-600 analog
@@ -146,7 +148,10 @@ class SequentialSysExParser(SysExParser):
                 print("", bin(byte))
             raise ParseError(f"Expected 32 bytes of data, got {len(raw_data)}")
         # compose bytes from nibbles
-        data = [int(msb << 4 | lsb) for lsb, msb in zip(raw_data[::2], raw_data[1::2])]
+        data = [
+            int(msb << 4 | lsb)
+            for lsb, msb in zip(raw_data[::2], raw_data[1::2])
+        ]
         parameters = []
         # generate list of parameters from raw data
         for param in SequentialSysExParser.parameters:

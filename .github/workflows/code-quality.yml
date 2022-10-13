@@ -1,10 +1,10 @@
-name: Checks
+name: Python linting and formatting checks
 on: [pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Checks
+    name: Python linting and formatting checks
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
@@ -12,6 +12,6 @@ jobs:
         python-version: 3.x
     - run: pip install --upgrade pip
     - run: pip install "black<23" pylint==v3.0.0a3 mypy==v0.902
-    - run: black --diff --check $(git ls-files '*.py' p600_syxdump) 
+    - run: black --diff --check .
     - run: pylint --disable=all --enable=unused-import $(git ls-files '*.py' p600_syxdump)
     - run: mypy --strict $(git ls-files '*.py' p600_syxdump)

@@ -26,7 +26,9 @@ class SysExParser(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def decode(self, msg: bytes) -> tuple[int, list[tuple[str, int]], list[int]]:
+    def decode(
+        self, msg: bytes
+    ) -> tuple[int, list[tuple[str, int]], list[int]]:
         """
         This function decodes a MIDI SysEx dump. created using
 

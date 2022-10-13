@@ -153,7 +153,9 @@ class GliGliSysExParser(SysExParser):
                 return True
         return False
 
-    def decode(self, msg: bytes) -> tuple[int, list[tuple[str, int]], list[int]]:
+    def decode(
+        self, msg: bytes
+    ) -> tuple[int, list[tuple[str, int]], list[int]]:
         """
         This function decodes a MIDI SysEx dump created using
         the original GliGli mod for the Sequential Circuits Prophet-600 analog
