@@ -17,7 +17,8 @@ The following formats are supported:
   and
   [8](https://github.com/image-et-son/p600fw/blob/master/syxmgmt/storage_8.spec))
 
-Currently, it is possible to dump SysEx data using the script `p600_syxdump`.
+Currently, it is possible to print SysEx data in human readable form
+using the script `p600_syxdump`.
 
 ### Installation and usage
 
