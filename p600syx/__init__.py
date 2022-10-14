@@ -8,8 +8,6 @@ from typing import Optional
 from .sysex_parser import SysExParser
 from .sequential_sysex_parser import SequentialSysExParser
 from .gligli_sysex_parser import GliGliSysExParser
-from .imogen7_sysex_parser import Imogen7SysExParser
-from .imogen8_sysex_parser import Imogen8SysExParser
 
 
 class SysExParserFactory:
@@ -52,5 +50,3 @@ class SysExParserFactory:
 factory = SysExParserFactory()
 factory.register_parser(SequentialSysExParser())
 factory.register_parser(GliGliSysExParser())
-factory.register_parser(Imogen7SysExParser())
-factory.register_parser(Imogen8SysExParser())
