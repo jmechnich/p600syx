@@ -59,8 +59,11 @@ if __name__ == "__main__":
         if not parser:
             print(f"No suitable parser found for message {i}")
             if args.debug:
-                print(repr(m), file=sys.stderr)
-                print()
+                for chunk in [m[i : i + 5] for i in range(0, len(m), 5)]:
+                    for char in chunk:
+                        print(f"{char:02x}", file=sys.stderr, end="")
+                    print(" ", file=sys.stderr, end="")
+                print(file=sys.stderr)
             continue
         if args.debug:
             print(f"Using {parser.name} for message {i}", file=sys.stderr)
@@ -76,7 +79,7 @@ if __name__ == "__main__":
                 print(f"{name:30}: {value:5}")
 
         if args.debug:
-            print()
+            print(file=sys.stderr)
             print(f"Data length: {len(data)}", file=sys.stderr)
             print(data, file=sys.stderr)
             print(file=sys.stderr)
