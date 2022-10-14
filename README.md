@@ -12,7 +12,10 @@ The following formats are supported:
 
 * The original patch format documented in the owner's manual
 * The custom format introduced by GliGli ([documentation](https://github.com/gligli/p600fw/blob/master/documentation/sysex_format.ods))
-* The updated dump formats by Imogen (versions [7]() and [8]())
+* The updated dump formats by Imogen (versions
+  [7](https://github.com/image-et-son/p600fw/blob/master/syxmgmt/storage_7.spec)
+  and
+  [8](https://github.com/image-et-son/p600fw/blob/master/syxmgmt/storage_8.spec))
 
 Currently, it is possible to dump SysEx data using the script `p600_syxdump`.
 
@@ -27,7 +30,7 @@ pip install p600syx
 After installation, the script can be used as follows:
 
 ```
-usage: p600_syxdump [-h] [-d] [-p PROGRAM] [infile]
+usage: p600_syxdump [-h] [-d] [-m MESSAGE] [-p PROGRAM] [infile]
 
 Print preset contents of Prophet-600 MIDI SysEx dumps.
 
@@ -38,6 +41,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -d, --debug           turn on debug output
+  -m MESSAGE, --message MESSAGE
+                        select message number (default: all messages)
   -p PROGRAM, --program PROGRAM
-                        filter for program number
+                        select program number (default: all programs)
 ```

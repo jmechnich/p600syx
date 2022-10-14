@@ -77,7 +77,7 @@ class GliGliSysExParser(SysExParser):
             ("Poly Mod Osc A Destination", 1),
             ("Poly Mod Filter Destination", 1),
             ("LFO Shape", 1),
-            ("LFO Speed Range", 1),
+            ("LFO Speed Range" if format_version == 1 else "(unused)", 1),
             ("LFO Mode Destination", 1),
             ("Keyboard Filter Tracking", 1),
             ("Filter EG Exponential/Linear", 1),
@@ -101,7 +101,12 @@ class GliGliSysExParser(SysExParser):
             ("Vibrato Frequency", 2),
             ("Vibrato Amount", 2),
             ("Unison Detune", 2),
-            ("(Arpeggiator/Sequencer clock)", 2),
+            (
+                "Arpeggiator/Sequencer clock"
+                if format_version < 7
+                else "(unused)",
+                2,
+            ),
             ("Modulation Wheel Target", 1),
             ("(padding)" if format_version == 2 else "Vibrato Target", 1),
         ]
