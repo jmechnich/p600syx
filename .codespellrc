@@ -1,0 +1,3 @@
+[codespell]
+skip = ./.git,./.mypy_cache,./*.egg-info
+ignore-regex = ^\[!\[.*
