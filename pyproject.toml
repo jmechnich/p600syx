@@ -11,6 +11,6 @@ target-version = ['py38']
 include = '''
 (
   \.pyi?$
-  | p600_syxdump
+  | p600_.*$
 )
 '''

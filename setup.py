@@ -16,8 +16,8 @@ setup(
     url="https://github.com/jmechnich/p600syx",
     use_scm_version={"local_scheme": "no-local-version"},
     setup_requires=["setuptools_scm"],
-    install_requires=["PyGithub"],
-    scripts=["p600_syxdump"],
+    install_requires=["appdirs", "mido", "python-rtmidi"],
+    scripts=["p600_decode", "p600_recv", "p600_send"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",

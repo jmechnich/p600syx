@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import sys
+import time
+
+import mido  # type: ignore
+
+from p600syx.util import SysEx, get_config, get_port
+
+argparser = argparse.ArgumentParser(
+    description="Receive MIDI SysEx dumps from Prophet-600."
+)
+argparser.add_argument(
+    "-c",
+    "--config",
+    default=os.path.join(
+        os.environ["HOME"], ".config", f"{argparser.prog}.conf"
+    ),
+    help="configuration file (default: %(default)s)",
+)
+argparser.add_argument(
+    "-d", "--debug", action="store_true", help="turn on debug output"
+)
+argparser.add_argument(
+    "-l", "--list", action="store_true", help="list MIDI ports and exit"
+)
+argparser.add_argument(
+    "-n",
+    "--number",
+    type=int,
+    default=-1,
+    help="select patch number (-1 for all, default: %(default)s)",
+)
+argparser.add_argument("-p", "--port", help="MIDI port that should be used")
+argparser.add_argument(
+    "-s",
+    "--sleep",
+    type=int,
+    default=150,
+    help="number of milliseconds to wait between messages (default: %(default)s)",
+)
+argparser.add_argument(
+    "outfile",
+    nargs="?",
+    help="output sysex file",
+)
+args = argparser.parse_args()
+
+inports = set(mido.get_input_names())
+outports = set(mido.get_output_names())
+if args.list:
+    print(f"MIDI in ports: {inports}")
+    print(f"MIDI out ports: {outports}")
+    sys.exit(0)
+
+config = get_config(args, [args.config])
+debug = config.get("debug", False)
+
+port = config.get("port", "")
+inport = get_port(inports, port)
+outport = get_port(outports, port)
+
+patch_number = int(config.get("number", -1))
+if patch_number < 0:
+    patches = range(100)
+else:
+    patches = range(patch_number, patch_number + 1)
+
+if debug:
+    print(f"Dumping {len(patches)} patches", file=sys.stderr)
+
+data = b""
+with mido.open_output(outport) as midiout:
+    with mido.open_input(inport) as midiin:
+        for i, patch in enumerate(patches):
+            if debug:
+                print(f"Requesting patch {i:02}", file=sys.stderr)
+            msg = mido.Message(
+                "sysex",
+                data=[
+                    SysEx.SYSEX_ID_0,
+                    SysEx.SYSEX_ID_1,
+                    SysEx.SYSEX_ID_2,
+                    SysEx.SYSEX_COMMAND_PATCH_DUMP_REQUEST,
+                    patch,
+                ],
+            )
+            midiout.send(msg)
+
+            reply = midiin.receive()
+            data += bytes(reply.bytes())
+            time.sleep(args.sleep / 1000.0)
+
+outfile = config.get("outfile", None)
+if outfile:
+    if debug:
+        print(f"Writing to file {outfile}", file=sys.stderr)
+    with open(outfile, "wb") as f:
+        f.write(data)
+else:
+    if debug:
+        print(f"Using standard output", file=sys.stderr)
+    sys.stdout.buffer.write(data)

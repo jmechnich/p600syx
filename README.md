@@ -17,8 +17,11 @@ The following formats are supported:
   and
   [8](https://github.com/image-et-son/p600fw/blob/master/syxmgmt/storage_8.spec))
 
-Currently, it is possible to print SysEx data in human readable form
-using the script `p600_syxdump`.
+The available executable programs are:
+
+* `p600_decode` - decode patch data to human readable form
+* `p600_recv` - receive patch data via MIDI
+* `p600_send` - send patch and other SysEx data (i.e. firmware files) via MIDI
 
 ### Installation and usage
 
@@ -28,22 +31,4 @@ The easiest way is to install the software from https://pypi.org using `pip`:
 pip install p600syx
 ```
 
-After installation, the script can be used as follows:
-
-```
-usage: p600_syxdump [-h] [-d] [-m MESSAGE] [-p PROGRAM] [infile]
-
-Print preset contents of Prophet-600 MIDI SysEx dumps.
-
-positional arguments:
-  infile                input sysex file. If no file is given, the script will read from
-                        standard input.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -d, --debug           turn on debug output
-  -m MESSAGE, --message MESSAGE
-                        select message number (default: all messages)
-  -p PROGRAM, --program PROGRAM
-                        select program number (default: all programs)
-```
+After installing the package, check `p600_SCRIPTNAME -h` for further usage instructions.

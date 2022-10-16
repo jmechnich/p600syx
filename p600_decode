@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import sys
+
+import p600syx
+
+argparser = argparse.ArgumentParser(
+    description="Print preset contents of Prophet-600 MIDI SysEx dumps."
+)
+argparser.add_argument(
+    "-d", "--debug", action="store_true", help="turn on debug output"
+)
+argparser.add_argument(
+    "-m",
+    "--message",
+    type=int,
+    default=-1,
+    help="select message number (default: all messages)",
+)
+argparser.add_argument(
+    "-p",
+    "--program",
+    type=int,
+    default=-1,
+    help="select program number (default: all programs)",
+)
+argparser.add_argument(
+    "infile",
+    nargs="?",
+    help="input sysex file. If no file is given, the script will read from standard input.",
+)
+args = argparser.parse_args()
+
+if args.infile:
+    if not os.path.exists(args.infile):
+        print(f"File {args.infile} not found, exiting")
+        sys.exit(1)
+    if args.debug:
+        print(f"Reading from file {args.infile}", file=sys.stderr)
+    with open(args.infile, "rb") as f:
+        raw_data = f.read()
+else:
+    if args.debug:
+        print("Reading from stdin", file=sys.stderr)
+    raw_data = sys.stdin.buffer.read()
+
+# Split SysEx stream at the terminating 0xf7, drop empty messages
+msgs = [msg for msg in raw_data.split(b"\xf7") if len(msg)]
+if args.debug:
+    print(f"Found {len(msgs)} messages")
+
+for i, m in enumerate(msgs):
+    if args.message > -1 and i != args.message:
+        continue
+    parser = p600syx.factory.get_parser(m)
+    if not parser:
+        print(f"No suitable parser found for message {i}")
+        if args.debug:
+            for chunk in [m[i : i + 5] for i in range(0, len(m), 5)]:
+                for char in chunk:
+                    print(f"{char:02x}", file=sys.stderr, end="")
+                print(" ", file=sys.stderr, end="")
+            print(file=sys.stderr)
+        continue
+    if args.debug:
+        print(f"Using {parser.name} for message {i}", file=sys.stderr)
+    program, parameters, data = parser.decode(m)
+    if args.program > -1 and program != args.program:
+        continue
+    print()
+    print(f'{"Program number":30}: {program:5}')
+    for name, value in parameters:
+        if name.startswith("Patch Name") and value > 0:
+            print(f"{name:30}: {value:5} {repr(chr(value))}")
+        else:
+            print(f"{name:30}: {value:5}")
+
+    if args.debug:
+        print(file=sys.stderr)
+        print(f"Data length: {len(data)}", file=sys.stderr)
+        print(data, file=sys.stderr)
+        print(file=sys.stderr)

@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import sys
+import time
+
+import mido  # type: ignore
+
+from p600syx.util import get_config, get_port
+
+argparser = argparse.ArgumentParser(
+    description="Send MIDI SysEx dumps to Prophet-600."
+)
+argparser.add_argument(
+    "-c",
+    "--config",
+    default=os.path.join(
+        os.environ["HOME"], ".config", f"{argparser.prog}.conf"
+    ),
+    help="configuration file (default: %(default)s)",
+)
+argparser.add_argument(
+    "-d", "--debug", action="store_true", help="turn on debug output"
+)
+argparser.add_argument(
+    "-l", "--list", action="store_true", help="list MIDI ports and exit"
+)
+argparser.add_argument("-p", "--port", help="MIDI port that should be used")
+argparser.add_argument(
+    "-s",
+    "--sleep",
+    type=int,
+    default=150,
+    help="number of milliseconds to wait between messages (default: %(default)s)",
+)
+argparser.add_argument(
+    "infile",
+    nargs="?",
+    help="input sysex file",
+)
+args = argparser.parse_args()
+
+outs = set(mido.get_output_names())
+if args.list:
+    print(f"MIDI ports: {outs}")
+    sys.exit(0)
+
+config = get_config(args, [args.config])
+debug = config.get("debug", False)
+
+port = config.get("port", "")
+outport = get_port(outs, port)
+
+infile = config.get("infile", None)
+if not infile:
+    print(f"Requiring input file, exiting")
+    sys.exit(1)
+if not os.path.exists(infile):
+    print(f"File {infile} not found, exiting")
+    sys.exit(1)
+if debug:
+    print(f"Reading from file {infile}", file=sys.stderr)
+messages = mido.read_syx_file(infile)
+if debug:
+    print(f"Read {len(messages)} from file, sending now", file=sys.stderr)
+
+with mido.open_output(outport) as o:
+    for i, m in enumerate(messages):
+        if debug:
+            print(f"Sending message {i+1}", file=sys.stderr)
+        o.send(m)
+        time.sleep(args.sleep / 1000.0)
