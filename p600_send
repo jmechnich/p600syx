@@ -6,6 +6,7 @@ import sys
 import time
 
 import mido  # type: ignore
+from progress.bar import IncrementalBar  # type: ignore
 
 from p600syx.util import get_config, get_port
 
@@ -65,9 +66,10 @@ messages = mido.read_syx_file(infile)
 if debug:
     print(f"Read {len(messages)} from file, sending now", file=sys.stderr)
 
+bar = IncrementalBar("Sending", max=len(messages))
 with mido.open_output(outport) as o:
     for i, m in enumerate(messages):
-        if debug:
-            print(f"Sending message {i+1}", file=sys.stderr)
         o.send(m)
         time.sleep(args.sleep / 1000.0)
+        bar.next()
+bar.finish()
