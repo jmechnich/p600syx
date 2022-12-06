@@ -130,7 +130,7 @@ class GliGliSysExParser(SysExParser):
         ]
 
         for i in range(16):
-            parameters.append((f"Patch Name ({i+1:02d}1/16)", 1))
+            parameters.append((f"Patch Name ({i+1:02d}/16)", 1))
 
         return parameters
 
