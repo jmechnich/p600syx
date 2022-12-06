@@ -4,6 +4,7 @@ the original firmware for the Sequential Circuits Prophet-600 analog
 synthesizer.
 """
 from collections.abc import Callable
+import sys
 
 from .sysex_parser import SysExParser
 from .error import ParseError
@@ -143,10 +144,17 @@ class SequentialSysExParser(SysExParser):
         # 16 bytes of data sent as 32 4-bit nibbles
         # right justified, LS nibble sent first
         raw_data = msg[len(self.header) + 1 :]
-        if len(raw_data) != 32:
-            for byte in raw_data:
-                print("", bin(byte))
-            raise ParseError(f"Expected 32 bytes of data, got {len(raw_data)}")
+        raw_size = len(raw_data)
+        if raw_size != 32:
+            if raw_size > 32:
+                print(
+                    f"WARNING: message contains {raw_size-32} extra bytes: {raw_data[32:]!r}",
+                    file=sys.stderr,
+                )
+            else:
+                for byte in raw_data:
+                    print("", bin(byte))
+                raise ParseError(f"Expected 32 bytes of data, got {raw_size}")
         # compose bytes from nibbles
         data = [
             int(msb << 4 | lsb)
